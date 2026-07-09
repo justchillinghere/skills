@@ -1,0 +1,30 @@
+// Reads the current access token from the auth domain and attaches it as a Bearer header.
+// On 401, attempts a single refresh; if refresh fails, calls signOut.
+//
+// Do not put auth state in module globals here — read it from `domains/auth`.
+
+import type { Middleware } from 'openapi-fetch'
+
+import { getAccessToken, refreshSession, signOut } from '@/domains/auth/application/AuthSessionManager'
+
+export const authMiddleware: Middleware = {
+  async onRequest({ request }) {
+    const token = getAccessToken()
+    if (token) request.headers.set('Authorization', `Bearer ${token}`)
+    return request
+  },
+
+  async onResponse({ request, response }) {
+    if (response.status !== 401) return response
+
+    const refreshed = await refreshSession()
+    if (!refreshed) {
+      signOut()
+      return response
+    }
+
+    const retried = request.clone()
+    retried.headers.set('Authorization', `Bearer ${getAccessToken()}`)
+    return fetch(retried)
+  },
+}

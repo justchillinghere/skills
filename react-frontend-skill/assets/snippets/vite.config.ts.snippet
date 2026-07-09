@@ -1,0 +1,26 @@
+import path from 'path'
+
+import react from '@vitejs/plugin-react'
+import svgr from 'vite-plugin-svgr'
+import { defineConfig } from 'vite'
+// import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
+
+export default defineConfig({
+  plugins: [
+    // TanStackRouterVite(), // enable when using file-based TanStack Router
+    react(),
+    svgr(),
+  ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    },
+  },
+  build: {
+    sourcemap: true,
+    target: 'esnext',
+  },
+  server: {
+    port: 5173,
+  },
+})

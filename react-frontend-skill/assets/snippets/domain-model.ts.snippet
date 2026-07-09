@@ -1,0 +1,33 @@
+// Example domain model. Lives at:
+//   features/Vm/domain/VmModel.ts
+//
+// Pure TypeScript. No React, no fetch, no router, no atoms.
+// Wraps the API shape and exposes business-meaningful methods/getters.
+
+import type { components } from '@/api/types'
+
+type ApiVm = components['schemas']['Vm']
+
+export class VmModel {
+  private constructor(private readonly raw: ApiVm) {}
+
+  static fromApi(raw: ApiVm): VmModel {
+    return new VmModel(raw)
+  }
+
+  get id(): string { return this.raw.id }
+  get name(): string { return this.raw.name }
+  get status(): ApiVm['status'] { return this.raw.status }
+
+  get isLive(): boolean {
+    return this.raw.status === 'active' || this.raw.status === 'launching'
+  }
+
+  get canTerminate(): boolean {
+    return this.isLive
+  }
+
+  get displayName(): string {
+    return this.raw.name.trim() || `vm-${this.raw.id.slice(0, 8)}`
+  }
+}

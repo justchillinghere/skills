@@ -1,0 +1,4 @@
+interface:
+  display_name: "Python Backend Reviewer"
+  short_description: "Review Python backend changes after implementation"
+  default_prompt: "Use $python-backend-reviewer to review the current Python backend changes."

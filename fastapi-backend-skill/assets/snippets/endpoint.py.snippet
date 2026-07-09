@@ -1,0 +1,54 @@
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import BaseModel, EmailStr
+
+from app.application.use_cases.create_user import (
+    CreateUserDeps,
+    CreateUserInput,
+    UserError,
+    create_user,
+)
+from app.infrastructure.repositories.user import SqlAlchemyUserRepository
+
+
+router = APIRouter(prefix="/users", tags=["Users"])
+
+
+class CreateUserRequest(BaseModel):
+    email: EmailStr
+    name: str
+
+
+class UserResponse(BaseModel):
+    id: int
+    email: EmailStr
+    name: str
+
+
+def _get_create_user_deps(request: Request) -> CreateUserDeps:
+    return CreateUserDeps(
+        session_factory=request.app.state.db.session_factory,
+        users=SqlAlchemyUserRepository(),
+    )
+
+
+dep_create_user_deps = Depends(_get_create_user_deps)
+
+
+@router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def create_user_endpoint(
+    payload: CreateUserRequest,
+    deps: CreateUserDeps = dep_create_user_deps,
+) -> UserResponse:
+    try:
+        user = await create_user(
+            deps,
+            CreateUserInput(email=payload.email, name=payload.name),
+        )
+    except UserError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+
+    return UserResponse(id=user.id, email=user.email, name=user.name)
+

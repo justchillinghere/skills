@@ -1,0 +1,24 @@
+// Example feature query hook. Lives at:
+//   features/Vm/application/hooks/useVms.ts
+//
+// Owns: query key, fetch, mapping API → domain, cache settings.
+// Components import this hook; they never call the API client directly.
+
+import { useQuery } from '@tanstack/react-query'
+
+import { client } from '@/api/client'
+import { vmKeys } from '@/features/Vm/application/vmKeys'
+import { VmModel } from '@/features/Vm/domain/VmModel'
+import type { VmFilters } from '@/features/Vm/domain/types'
+
+export function useVms(filters: VmFilters) {
+  return useQuery({
+    queryKey: vmKeys.list(filters),
+    queryFn: async () => {
+      const { data, error } = await client.GET('/vms', { params: { query: filters } })
+      if (error) throw error
+      return (data?.items ?? []).map(VmModel.fromApi)
+    },
+    staleTime: 30_000,
+  })
+}

@@ -1,0 +1,50 @@
+set dotenv-load := true
+
+default:
+  @just --list
+
+docker-up:
+    docker compose --env-file .env up -d
+
+docker-up-redis:
+    docker compose --env-file .env --profile redis up -d
+
+docker-down:
+    docker compose --env-file .env down
+
+docker-clean:
+    docker compose --env-file .env down -v
+
+docker-build:
+    docker compose --env-file .env build
+
+docker-logs:
+    docker compose --env-file .env logs -f
+
+logs-service service:
+    docker compose --env-file .env logs -f {{service}}
+
+revision message:
+    uv run alembic revision --autogenerate -m "{{message}}"
+
+upgrade:
+    uv run alembic upgrade head
+
+downgrade:
+    uv run alembic downgrade -1
+
+history:
+    uv run alembic history
+
+current:
+    uv run alembic current
+
+test:
+    uv run pytest
+
+ruff-format:
+    uv run ruff format .
+
+ruff-check:
+    uv run ruff check . --fix
+

@@ -1,0 +1,51 @@
+from dataclasses import dataclass
+from typing import Protocol
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from app.domain.user import User
+
+
+class UserError(Exception):
+    pass
+
+
+class InternalError(Exception):
+    pass
+
+
+@dataclass(frozen=True)
+class CreateUserInput:
+    email: str
+    name: str
+
+
+@dataclass(frozen=True)
+class CreateUserDeps:
+    session_factory: async_sessionmaker[AsyncSession]
+    users: "UserRepository"
+
+
+class UserRepository(Protocol):
+    async def get_by_email(
+        self,
+        session: AsyncSession,
+        email: str,
+    ) -> User | None: ...
+
+    async def create(
+        self,
+        session: AsyncSession,
+        user: User,
+    ) -> User: ...
+
+
+async def create_user(deps: CreateUserDeps, input: CreateUserInput) -> User:
+    async with deps.session_factory() as session:
+        async with session.begin():
+            existing = await deps.users.get_by_email(session, input.email)
+            if existing is not None:
+                raise UserError("User already exists")
+
+            user = User.new(email=input.email, name=input.name)
+            return await deps.users.create(session, user)

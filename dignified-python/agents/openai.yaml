@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dignified Python"
+  short_description: "Opinionated Python style checks"
+  default_prompt: "Use $dignified-python to review and refactor this Python change to match repo standards."

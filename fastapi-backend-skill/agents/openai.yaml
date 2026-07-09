@@ -1,0 +1,5 @@
+interface:
+  display_name: "FastAPI Backend"
+  short_description: "Build and maintain async FastAPI backends"
+  default_prompt: "Use $fastapi-backend-skill to scaffold or evolve an async FastAPI backend."
+

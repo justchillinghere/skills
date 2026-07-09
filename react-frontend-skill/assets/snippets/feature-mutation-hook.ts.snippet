@@ -1,0 +1,37 @@
+// Example feature mutation hook. Lives at:
+//   features/Vm/application/hooks/useCreateVm.ts
+//
+// Owns: API call, optimistic update, toast, analytics, cache invalidation.
+// Components call `mutate(input)` and pass nothing else.
+
+import toast from 'react-hot-toast'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+
+import { client } from '@/api/client'
+import { useAnalytics } from '@/services/analytics/useAnalytics'
+import { vmKeys } from '@/features/Vm/application/vmKeys'
+import type { CreateVmInput } from '@/features/Vm/domain/types'
+import { formatApiError } from '@/utils/errors'
+
+export function useCreateVm() {
+  const queryClient = useQueryClient()
+  const analytics = useAnalytics()
+
+  return useMutation({
+    mutationFn: async (input: CreateVmInput) => {
+      const { data, error } = await client.POST('/vms', { body: input })
+      if (error) throw error
+      return data
+    },
+    onSuccess: (_data, input) => {
+      analytics.capture('vm_created', { region: input.region, size: input.size })
+      toast.success('VM created')
+    },
+    onError: (error) => {
+      toast.error(formatApiError(error))
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: vmKeys.all })
+    },
+  })
+}

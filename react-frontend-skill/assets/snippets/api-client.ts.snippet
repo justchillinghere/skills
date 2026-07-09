@@ -1,0 +1,18 @@
+// Typed HTTP client built on `openapi-fetch` against generated `paths` from OpenAPI.
+//
+// 1. Generate types: `npx openapi-typescript ./openapi.json -o src/api/types.ts`
+// 2. Use `client.GET('/path', { params: { query, path } })` etc.
+//
+// Hooks in `application/` import this client. Components do not.
+
+import createClient from 'openapi-fetch'
+
+import { authMiddleware } from './authMiddleware'
+import type { paths } from './types'
+import { env } from '@/config/env'
+
+export const client = createClient<paths>({
+  baseUrl: env.VITE_API_BASE_URL,
+})
+
+client.use(authMiddleware)

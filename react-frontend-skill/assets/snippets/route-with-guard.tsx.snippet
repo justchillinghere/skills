@@ -1,0 +1,21 @@
+// Example file-based route with a capability guard.
+// Lives at: src/routes/vms/index.tsx (TanStack Router file-based)
+//
+// Route components are thin: they wire the guard and mount a page from `features/`.
+
+import { createFileRoute, redirect } from '@tanstack/react-router'
+
+import VmListPage from '@/features/Vm/pages/VmListPage'
+
+export const Route = createFileRoute('/vms/')({
+  beforeLoad: ({ context }) => {
+    if (!context.authContext.capabilities?.canListVm) {
+      throw redirect({ to: '/403' })
+    }
+  },
+  component: RouteComponent,
+})
+
+function RouteComponent() {
+  return <VmListPage />
+}
