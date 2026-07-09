@@ -14,7 +14,8 @@ Create one Git repository at `/Users/leo/Projects/skills` as the source of truth
 - [x] (2026-07-09) Replace harness-specific installation copies with symlinks and remove only verified duplicate copies.
 - [x] (2026-07-09) Correct portable skills that contain hard-coded harness paths.
 - [x] (2026-07-09) Validate the managed links, Git state, and the `just sync` idempotence behavior.
-- [ ] Commit, rename the branch to `main`, add the requested remote, and push the initial commit.
+- [x] (2026-07-09) Commit the migration, rename the branch to `main`, and configure `origin` as `git@github.com:justchillinghere/skills.git`.
+- [ ] Push `main` to `origin` once this environment can resolve `github.com`.
 
 ## Surprises & Discoveries
 
@@ -22,6 +23,8 @@ Create one Git repository at `/Users/leo/Projects/skills` as the source of truth
   Evidence: SHA-256 hashes from the inventory matched.
 - Observation: the two `fastapi-backend-skill` copies differ in architectural guidance.
   Evidence: the user selected the `.agents` copy as canonical and asked to drop the older Claude copy.
+- Observation: the initial push cannot reach GitHub from this environment.
+  Evidence: `ssh: Could not resolve hostname github.com` when running `git push -u origin main`.
 
 ## Decision Log
 
@@ -38,6 +41,8 @@ Create one Git repository at `/Users/leo/Projects/skills` as the source of truth
 ## Outcomes & Retrospective
 
 Seven portable skills now live in this repository. Each is linked from both user-level discovery roots, while the six Claude-specific skill directories remain untouched. The Excalidraw renderer now reports setup commands using its own real script directory. The Python backend reviewer resolves the canonical skill library from its own location, so its packet and installed hook remain valid after the migration.
+
+The migration was committed locally as `bc4bc00` on `main`. The requested remote is configured, but publication remains pending because the current environment cannot resolve GitHub.
 
 ## Context and Orientation
 
@@ -77,4 +82,4 @@ The canonical FastAPI directory is sourced from `~/.agents/skills/fastapi-backen
 
 The `sync` recipe requires `zsh`, `mkdir`, `readlink`, `rm`, and `ln`, which are available on the target macOS environment. It treats a top-level directory with `SKILL.md` as the repository interface for a portable skill.
 
-Plan created on 2026-07-09 to record the user-authorized centralization and link migration. Updated on 2026-07-09 after the migration and idempotence validation completed.
+Plan created on 2026-07-09 to record the user-authorized centralization and link migration. Updated on 2026-07-09 after the migration, idempotence validation, initial commit, and unsuccessful push attempt.
