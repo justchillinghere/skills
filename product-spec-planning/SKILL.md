@@ -22,7 +22,8 @@ All artifacts live in a **product store**, independent of repo topology (works w
 ```text
 product/
   specs/                 # canonical CURRENT product truth (strict), folded in on Sync
-    <domain>.md
+    <capability>/
+      spec.md
   changes/
     <change-id>/         # one in-flight product change = the working directory for a run
       framed-intake.md
@@ -36,7 +37,36 @@ product/
 
 - The **change directory** `product/changes/<change-id>/` is the argument every command operates on. It is a parameter, never hardcoded.
 - If `product/` is missing, create it from `assets/store-scaffold/` on first use.
-- `specs/` is *generated*, not hand-written: it is the durable "current behavior" truth, updated only by `6_sync.md`. Loose product notes, opinions, and backlog stay wherever the human keeps them (e.g. `docs/product_description`) — they are not this store.
+- `specs/` is the durable "current behavior" truth. During normal operation it is *generated* — written only by `6_sync.md`, never hand-edited mid-change. It may additionally be **seeded once** by migrating existing product documentation; see *Seeding* below.
+- Loose product notes, opinions, rationale, roadmap, and backlog stay wherever the human keeps them (e.g. `docs/product_description`) — they are not this store.
+- **Specs are written in English**, regardless of the language of the surrounding product docs. Engineering flows downstream and the validator both assume it.
+
+## Spec shape
+
+One capability per directory, one `spec.md` per capability. Inside it, every `### Requirement:` owns its `#### Scenario:` blocks — scenarios are never collected into a separate section, because a scenario detached from the requirement it proves rots silently when that requirement changes.
+
+The same requirement blocks appear in a change's `spec.md` under `## ADDED|MODIFIED|REMOVED Requirements`. That is deliberate: Sync folds a change in by *moving whole blocks*, with no rewriting and no second copy of the behavior to maintain. See `5_spec.md` and `6_sync.md` for the exact skeletons.
+
+Validate before any gate:
+
+```bash
+python3 <skill-path>/scripts/validate_spec.py product/specs/
+python3 <skill-path>/scripts/validate_spec.py <change-dir>/spec.md --delta
+```
+
+It enforces the structure — requirement/scenario nesting, GIVEN-WHEN-THEN completeness, `Verified:` markers, `Capability:` routing, unique names, English-only — and exits non-zero on failure.
+
+## Precedence against human product docs
+
+Where a `specs/` file and a human product doc both describe the same area:
+
+- On what the system does **today** — `specs/` wins.
+- On **intent**, direction, or anything not yet built — the human docs win.
+- When neither is certain — verify against code. Research does this by default.
+
+## Seeding
+
+A project that already has substantial product documentation may seed `specs/` from it once, rather than waiting for every capability to pass through a change. Seeded requirements are migrated, not verified: each carries `Verified: NO` until a change touches that area and Research checks it against code. An unverified spec is worse than no spec if it is mistaken for verified truth, so the marker is mandatory and the validator enforces it.
 
 ## Stage map
 
