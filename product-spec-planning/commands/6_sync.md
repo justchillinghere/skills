@@ -16,7 +16,9 @@ Fold the approved change into the canonical current-truth specs, archive the cha
 
 1. **Read `spec.md` fully.**
 
-2. **Locate the affected capability spec(s)** under `product/specs/<capability>/spec.md`. If none exists yet, create one — but document **only the slice this change touches**, grounded in `research.md`; do not describe the whole capability. A new capability spec is partial by design and grows as later changes land.
+2. **Locate the affected capability spec(s)** using each requirement's `Capability:` line, which is the capability's path under `product/specs/` — `memo/active-work` means `product/specs/memo/active-work/spec.md`. If none exists yet, create one — but document **only the slice this change touches**, grounded in `research.md`; do not describe the whole capability. A new capability spec is partial by design and grows as later changes land.
+
+   When a new capability belongs to a domain that already has siblings, nest it there rather than adding a flat sibling at the top level. The file's `# Spec:` title must equal its path under `specs/`; the validator rejects a title that disagrees with its directory.
 
 3. **Apply the delta into the capability spec** so `specs/` reflects the *current* behavior:
    - `ADDED` → insert the `### Requirement:` block with its scenarios.

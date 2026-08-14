@@ -35,7 +35,10 @@ TITLE_RE = re.compile(r"^# Spec:\s*(\S.*?)\s*$")
 CYRILLIC_RE = re.compile(r"[Ѐ-ӿ]")
 MODAL_RE = re.compile(r"\b(?:SHALL|MUST|SHOULD)\b")
 VERIFIED_RE = re.compile(r"^Verified:\s*(?:\d{4}-\d{2}-\d{2}|NO)\b")
-CAPABILITY_RE = re.compile(r"^Capability:\s*[a-z0-9][a-z0-9-]*$")
+CAPABILITY_SEGMENT = r"[a-z0-9][a-z0-9-]*"
+CAPABILITY_RE = re.compile(
+    rf"^Capability:\s*{CAPABILITY_SEGMENT}(?:/{CAPABILITY_SEGMENT})*$"
+)
 WHEN_RE = re.compile(r"^\s*-\s+\*\*WHEN\*\*\s+\S")
 THEN_RE = re.compile(r"^\s*-\s+\*\*THEN\*\*\s+\S")
 
@@ -181,6 +184,11 @@ def check_document(doc: Document, *, delta: bool) -> list[str]:
     else:
         if doc.title is None:
             problems.append("0: missing '# Spec: <capability>' title")
+        elif doc.title.rsplit("/", 1)[-1] != doc.path.parent.name:
+            problems.append(
+                f"0: title '# Spec: {doc.title}' does not match its directory "
+                f"'{doc.path.parent.name}/'"
+            )
         for required in REQUIRED_CANONICAL_SECTIONS:
             if required not in doc.sections:
                 problems.append(f"0: missing '## {required}' section")

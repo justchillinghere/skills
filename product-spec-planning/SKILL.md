@@ -24,6 +24,10 @@ product/
   specs/                 # canonical CURRENT product truth (strict), folded in on Sync
     <capability>/
       spec.md
+    <domain>/            # a domain groups related capabilities
+      spec.md            # optional: rules that hold across the whole domain
+      <capability>/
+        spec.md
   changes/
     <change-id>/         # one in-flight product change = the working directory for a run
       framed-intake.md
@@ -44,6 +48,10 @@ product/
 ## Spec shape
 
 One capability per directory, one `spec.md` per capability. Inside it, every `### Requirement:` owns its `#### Scenario:` blocks — scenarios are never collected into a separate section, because a scenario detached from the requirement it proves rots silently when that requirement changes.
+
+Capabilities may nest under a domain when a domain has several of them — `specs/memo/draft/spec.md`, `specs/memo/active-work/spec.md`. A domain directory may also carry its own `spec.md` for rules that hold across the whole domain, such as lifecycle invariants. Nest only where a domain actually has siblings; a domain with one capability stays flat and can gain children later by moving its spec down a level.
+
+The capability name is its path under `specs/`, so a nested capability is named `memo/draft`. That name is what appears in the file's `# Spec:` title and in a change's `Capability:` routing line, and the validator checks that the title agrees with the directory it sits in.
 
 The same requirement blocks appear in a change's `spec.md` under `## ADDED|MODIFIED|REMOVED Requirements`. That is deliberate: Sync folds a change in by *moving whole blocks*, with no rewriting and no second copy of the behavior to maintain. See `5_spec.md` and `6_sync.md` for the exact skeletons.
 

@@ -20,7 +20,7 @@ The behavior sections use the **same requirement blocks as the canonical specs**
 
 2. **Write `spec.md`** using the skeleton below. Distill design into what matters for implementation planning — drop discussion, rationale depth, and alternatives. State behavior with `SHALL`/`MUST` (required) and `SHOULD` (exceptions acceptable).
 
-3. **Route every requirement.** Each `### Requirement:` carries a `Capability:` line naming the capability spec it will land in (`product/specs/<capability>/spec.md`). Use an existing capability name where one fits; introduce a new one only when the behavior genuinely has no home.
+3. **Route every requirement.** Each `### Requirement:` carries a `Capability:` line naming the capability spec it will land in. The name is the capability's path under `product/specs/`, so a nested capability routes as `memo/active-work` and lands in `product/specs/memo/active-work/spec.md`. Use an existing capability where one fits; introduce a new one only when the behavior genuinely has no home.
 
 4. **Run the validator:**
 
