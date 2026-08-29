@@ -1,36 +1,53 @@
 ---
 name: development-planning
-description: Use when the user asks to plan, execute, continue, resume, follow up, maintain, or organize a development task using repository execution plans. Ensures docs/PLANS.md and docs/plans/ exist, reads the planning instructions, creates or continues active plans, archives completed plans, records deferred cleanup in TECH_DEBT.md, and uses stable task IDs for plan files and branches.
+description: Use when the user asks to plan, execute, continue, resume, follow up, maintain, or organize a development task using repository execution plans. Ensures docs/plans/ exists, reads the canonical planning conventions from this skill (never copying them into the repo), creates or continues active plans, archives completed plans, records deferred cleanup in TECH_DEBT.md, and uses stable task IDs for plan files and branches.
 ---
 
 # Development Planning
 
 Use this skill for development work that should be planned, resumed from an existing plan, or executed from a living task document.
 
-The repository owns the actual planning files. This skill only provides the setup convention, canonical `PLANS.md` template, and a helper for choosing the next local task ID.
+The repository owns the actual planning **state** — the plan files and tech-debt log. The canonical `PLANS.md` template is generic instruction text that is identical in every repository, so it lives in this skill (`assets/PLANS.md`) and is **read from here, never copied into the repo**. Copying it produced a duplicate ~160-line file in every directory that used the skill; that is exactly what this skill no longer does.
 
 ## Repository Setup
 
-At the repository root, expect:
+At the repository root, the per-repo state is:
 
 ```text
 docs/
-├── PLANS.md
 └── plans/
     ├── active/
     ├── archived/
     └── TECH_DEBT.md
 ```
 
-If `docs/PLANS.md` is missing, create the structure and copy `assets/PLANS.md` from this skill into `docs/PLANS.md`.
+Create `docs/plans/active/` and `docs/plans/archived/` if missing.
 
 If `docs/plans/TECH_DEBT.md` is missing, copy `assets/TECH_DEBT.md` from this skill.
 
-Create `docs/plans/active/` and `docs/plans/archived/` if missing.
+Do **not** create `docs/PLANS.md`. The planning conventions come from this skill's `assets/PLANS.md`.
+
+### Migrating repos that already have a copied `docs/PLANS.md`
+
+Earlier versions of this skill copied `assets/PLANS.md` into `docs/PLANS.md`. When you run in such a repo, clean up the duplicate:
+
+1. Compare the repo file against this skill's template:
+
+   ```bash
+   cmp -s <skill-path>/assets/PLANS.md docs/PLANS.md
+   ```
+
+2. If they are identical (`cmp` exits 0), it is an unmodified auto-copy — delete `docs/PLANS.md`.
+3. If they differ, treat it as a **team customization**: keep it and follow it over this skill's template (see below).
 
 ## Required First Step
 
-Before authoring, editing, or executing a plan, read `docs/PLANS.md` in full. Follow it over this skill whenever there is a conflict. The repository-local file is the source of truth because teams may customize it.
+Before authoring, editing, or executing a plan, read the planning conventions in full:
+
+- If a **customized** `docs/PLANS.md` exists in the repo (differs from this skill's `assets/PLANS.md`), read that — the repository-local file wins because the team chose to override.
+- Otherwise, read this skill's `assets/PLANS.md`.
+
+Follow those conventions over this SKILL.md whenever there is a conflict.
 
 ## Choosing or Creating a Plan
 
@@ -47,7 +64,7 @@ When the user asks to plan a new task:
 2. Use `scripts/next_plan_id.py` from this skill to find the next local task ID.
 3. Create the plan under `docs/plans/active/NNN-slug.md`.
 4. Re-check before writing that no `NNN-*.md` exists anywhere under `docs/plans/`; if a collision exists, rerun the helper and use the next ID.
-5. Write a self-contained ExecPlan following `docs/PLANS.md`.
+5. Write a self-contained ExecPlan following the planning conventions read in the Required First Step.
 
 ## Task IDs and Names
 

@@ -88,7 +88,7 @@ Prefer additive code changes followed by subtractions that keep tests passing. P
 
     This ExecPlan is a living document. The sections `Progress`, `Surprises & Discoveries`, `Decision Log`, and `Outcomes & Retrospective` must be kept up to date as work proceeds.
 
-    If PLANS.md file is checked into the repo, reference the path to that file here from the repository root and note that this document must be maintained in accordance with PLANS.md.
+    Note here that this document must be maintained in accordance with the planning conventions ("PLANS.md"). Those conventions normally live in the `development-planning` skill (`assets/PLANS.md`), not in this repository. Only if a customized `docs/PLANS.md` is checked into this repo, reference that path here instead and defer to it.
 
     ## Purpose / Big Picture
 
