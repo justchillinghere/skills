@@ -95,7 +95,8 @@ Otherwise invoke the `lavish` skill and build `.lavish/ui-review-<slug>.html`:
 
 Only after the user approves the report:
 
-- Destination: `<project>/docs/ui-feedback/<YYYY-MM-DD>-<slug>/`
+- Destination: `<project>/.ui-feedback/<YYYY-MM-DD>-<slug>/` — a dot-directory so review packages stay out of commits.
+- Ensure `.ui-feedback/` is listed in the project's `.gitignore`: check first, append the line only if missing; skip when the project is not a git repository.
 - Write `feedback.md` (English, template below) and `shots/<NN>-<slug>.png` — the approved frames, numbered in item order.
 - The package must be self-contained: a fixer agent receives this one directory and reads the screenshots via the relative paths.
 
