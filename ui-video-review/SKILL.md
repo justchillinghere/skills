@@ -46,7 +46,13 @@ uv run <skill_dir>/scripts/transcribe.py <scratch>/audio.wav --output <scratch>/
 - If the project uses distinctive terms (feature names, anglicisms like «баттон», «хедер»), pass `--initial-prompt "<comma-separated terms>"` to bias decoding.
 - No diarization — recordings are solo by design.
 
-### 3. Split into feedback items
+### 3–5: run in a subagent
+
+Stages 3–5 are heavy on context (full transcript, dozens of frames). Do NOT run them in the main conversation: spawn ONE general-purpose subagent with the video path, `segments.json`, the scratch directory, and the stage 3–5 instructions below. It returns compact JSON only — the item list, each item carrying the path of its single approved frame. The main agent sanity-checks the returned items and goes straight to the report; it never reads the full transcript or the rejected candidate frames.
+
+Recordings usually start and end with the recorder's own UI (OBS) and meta narration («так, запись пошла…», «всё, выключаю»). This does not affect speech recognition; for items it is noise: produce no items from meta narration, and never pick a frame showing the recorder UI unless the remark is genuinely about it.
+
+### 3. Split into feedback items (subagent)
 
 Read `segments.json` and cut the narration into a numbered list of discrete items. For each item record:
 
@@ -54,13 +60,13 @@ Read `segments.json` and cut the narration into a numbered list of discrete item
 - `quote` — cleaned verbatim quote in the original language (drop filler words, keep meaning and tone)
 - `summary` — one sentence, **in English**
 - `action` — what to change, **in English**, concrete enough to act on
-- `category` — `bug` / `ux` / `copy` / `style` / `praise`
+- `category` — `bug` / `ux` / `copy` / `style`
 - `screen` — page or screen name, inferred from narration and frames
-- `severity` — `high` / `medium` / `low` (omit for `praise`)
+- `severity` — `high` / `medium` / `low`
 
-Include positive remarks as `praise` — the fixer agent must know what NOT to touch.
+Skip praise and positive remarks entirely — they do not become items.
 
-### 4. Candidate frames
+### 4. Candidate frames (subagent)
 
 For each item extract 3 candidates — at `t_start`, the interval midpoint, and `t_start + 2s` (clamped to video duration). People often narrate what was on screen a moment earlier or later, so never trust a single frame:
 
@@ -68,16 +74,20 @@ For each item extract 3 candidates — at `t_start`, the interval midpoint, and 
 ffmpeg -ss <t> -i <video> -frames:v 1 -vf "scale='min(1440,iw)':-2" <scratch>/item<NN>-<k>.png
 ```
 
-### 5. Vision pick
+### 5. Vision pick (subagent)
 
 Read each item's candidates and pick the frame where the discussed element is actually visible — the cursor position is a strong hint. If none of the three match the narration, widen the window to ±5 s, extract two more frames, and re-pick. Exactly one approved frame per item.
 
-### 6. Interactive report (lavish)
+The subagent's final answer is JSON: `[{id, t_start, t_end, quote, summary, action, category, screen, severity, frame_path}]` — no prose, no transcript dumps.
 
-Invoke the `lavish` skill and build `.lavish/ui-review-<slug>.html`:
+### 6. Interactive report (lavish) — default, skippable
+
+If the user asked for a non-interactive run («сразу артефакт», `--no-review`) or the skill runs in a headless/autonomous session, skip this stage: go straight to export (stage 7) with the subagent's items as-is, and say in the final reply that the package was produced without review.
+
+Otherwise invoke the `lavish` skill and build `.lavish/ui-review-<slug>.html`:
 
 - One card per item: screenshot (copy approved frames next to the HTML; reference with relative paths), timecode, original quote, English summary and action, category and severity badges.
-- Sort by severity, `praise` last.
+- Sort by severity.
 - Per the lavish `input` playbook, give each card controls: drop the item, request a different frame («возьми кадр на 01:31»), plus free annotation for rewording.
 - Poll and apply feedback until the user approves the report.
 
@@ -110,7 +120,7 @@ items: <N>
 - Said: «когда наводишь, тултип закрывает саму кнопку, кликнуть невозможно»
 - Action: move the tooltip above the button and add an offset from its edge
 
-## 2. [praise] ...
+## 2. [ux/medium] ...
 ```
 
 Quotes stay in the original language; everything else is English.
