@@ -1,6 +1,6 @@
 ---
 name: ui-video-review
-description: Turn a narrated screen recording (screencast where the user talks through UI feedback) into an interactive lavish review report and an exportable feedback.md + screenshots package for a fixer agent. Use when the user provides a video walkthrough of interface feedback to process, e.g. "разбери видео с фидбеком", "process my UI review recording", "/ui-video-review <path>".
+description: Turn a narrated screen recording (screencast where the user talks through UI feedback) into an interactive lavish review report and an exportable feedback.md + screenshots package for a fixer agent. Use when the user provides a video walkthrough of interface feedback or asks to process their latest recording, e.g. "разбери видео с фидбеком", "обработай последнюю запись по стандартному флоу", "/ui-video-review [path]".
 ---
 
 # UI Video Review
@@ -9,8 +9,8 @@ Pipeline: video → transcript with timestamps → discrete feedback items → s
 
 ## Input contract
 
-- **A video path is required.** Never guess or auto-pick a recording; if the path is missing, ask for it.
-- Optional but valuable: the target project (path or repo) the feedback is about. It drives terminology in summaries and is the export destination. If unknown by the export step, ask.
+- **Video:** an explicit path always wins. When the user gives no path and no other way to identify the recording (bare `/ui-video-review`, «обработай по стандартному флоу»), default to the newest video file (mp4 / mkv / mov) in `~/Movies` — the OBS recording folder. Announce the pick up front (filename, modified time, duration) so a wrong pick surfaces immediately; if the folder has no video files, ask for a path.
+- **Target project** (path or repo the feedback is about): drives terminology in summaries and is the export destination. If not named, infer it from the recording (visible URLs, app name) and conversation context, and announce the inferred destination together with the picked video; ask only if it is still unknown by the export step.
 - Formats: whatever OBS produces (mp4 / mkv / mov) — ffmpeg reads them all.
 
 ## Requirements
