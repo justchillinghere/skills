@@ -54,7 +54,8 @@ Fixed guardrails (always include):
 - Role: "You are an engineer in a Claude Code session. Implement strictly from the ExecPlan."
 - Read the plan documents **in full** before starting. Do not paraphrase them into code.
 - Follow the ExecPlan milestone order. Commit per milestone, frequently, with clear messages.
-- Do **not** push and do **not** open a PR until the human asks.
+- When implementation is done: push the branch and open a PR (draft is fine). The review runs
+  on that PR. This is the linear path — implement, push, review — not a gated one.
 - Resolve ambiguity autonomously through the Design Note. Record decisions in the ExecPlan
   `Decision Log` and keep `Progress` current. Do not ask "what next" between milestones.
 - **STOP rule**: if execution reveals a Design Note decision is wrong or missing, stop,
@@ -87,33 +88,27 @@ not touch the same files or depend on each other's output. When in doubt, go seq
 
 ## Step 3 — Review fan-out (always)
 
-When implementation returns, run the review. Each reviewer runs in its **own subagent with a
-clean context** — never the implementer's context, and never the implementer reviewing its
-own work. A reviewer that shares the author's context inherits the author's blind spots. The
-orchestrator conducts; the implementer does not spawn its own reviewers.
+When implementation returns, run the review by calling the **`review-swarm`** skill, targeting
+the PR the implementer opened. That skill owns the reviewer roster (which lenses run for which
+changed files), launches each reviewer in its own clean-context subagent, and posts findings
+inline on the PR (prefixed `QA review · <lens>`).
 
-### Reviewer roster
+This skill does not hold the review logic. It only triggers the review and then acts on the
+result. To change who reviews, which model each uses, or how findings are delivered, edit
+`review-swarm` — not this file.
 
-Run these reviewers, each as a separate subagent, on the working-tree changes. This roster is
-the modularity seam: **edit this list** to add, remove, or re-target reviewers, or to change a
-reviewer's model — without touching the flow above.
+Two principles this skill relies on `review-swarm` to keep:
 
-| Reviewer | How to run | Focus | Model |
-|---|---|---|---|
-| Backend correctness | `python-backend-reviewer` skill (or `/code-review`) | bugs, clean-layering, FastAPI, dignified-python, security, tests | `sonnet` |
-| Over-engineering | `/ponytail-review` | speculative abstractions, duplication, what to delete | `sonnet` |
-
-Notes for editing the roster:
-
-- Match reviewers to the stack. For a frontend task, swap the backend reviewer for the
-  frontend one. For a non-Python repo, drop `python-backend-reviewer`.
-- A reviewer's model may differ from the implementer's. You may point a reviewer at a
-  different model when the user has one configured for it.
-- Reviewers are report-only. They find and explain; they do not edit. Fixing is Step 5.
+- **Clean context.** No reviewer runs in the implementer's context, and the implementer never
+  reviews its own work. A shared-context reviewer inherits the author's blind spots.
+- **Independence.** Reviewers do not know about each other. When two independently flag the
+  same thing, that agreement is a strong signal you will see when you read the findings.
 
 ## Step 4 — Triage the findings yourself
 
-You (the smart orchestrator) read all the findings and decide. For each finding:
+You (the smart orchestrator) read all the findings — the comments `review-swarm` posted on
+the PR, each carrying a severity (`critical` / `high` / `medium` / `low`) and a rationale —
+and decide. For each finding:
 
 - **Clear, real, and simple** (a genuine bug, a safe simplification) → fix it (Step 5). Do
   not ask the human.
@@ -130,6 +125,9 @@ the same code-style guardrails as the implementer. Keep the fix diff small and t
 fix touches non-trivial logic, it leaves a runnable check behind, per the repo's testing
 convention.
 
+The fixer commits and pushes to the same PR branch. For each PR comment it resolves, it
+replies briefly with what it changed, then marks the thread resolved.
+
 After fixes land, re-run only the relevant reviewer if a fix was substantial. Do not loop
 endlessly: one fix pass, plus a targeted re-check, is normally enough.
 
@@ -137,11 +135,12 @@ endlessly: one fix pass, plus a targeted re-check, is normally enough.
 
 Give the human a short summary:
 
-- What was implemented and that it is committed (not pushed).
-- The review findings you fixed, in one line each.
-- The ambiguous findings you did **not** act on, as a list, so the human can decide.
+- What was implemented, and a link to the PR.
+- The review findings you fixed, in one line each (their PR threads are resolved).
+- The ambiguous findings you did **not** act on, as a list, so the human can decide. Their PR
+  threads stay open, waiting on the human.
 
-Stop there. Do not push or open a PR unless the user asks.
+Stop there. Do not merge the PR unless the user asks.
 
 ## What this skill is not
 
