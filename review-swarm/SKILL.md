@@ -19,7 +19,8 @@ them apart.
   - **Ours** — a lens file we write and maintain, in `assets/lenses/` (e.g. `backend.md`).
     This is the home for review rules we own.
   - **External** — a third-party tool we call by name (e.g. `/ponytail-review` from the
-    ponytail plugin, the built-in `/code-review`, or a lens run on Codex).
+    ponytail plugin, the built-in `/code-review`, or Codex's own reviewer via the codex
+    plugin as the cross-provider second opinion).
 - **Harness** — the wrapper this skill owns. For every reviewer it applies the lens to the
   diff, enforces the shared finding discipline (below), then **delivers** the findings
   (inline PR comments, or a returned report). The harness is the same for every reviewer.
@@ -39,17 +40,37 @@ names a lens skill — never inline rules.
 |---|---|---|---|
 | correctness bugs | external · `/code-review` | any code | sonnet |
 | over-engineering | external · `/ponytail-review` | any code | sonnet |
-| backend architecture | ours · `assets/lenses/backend.md` | Python backend (`*.py`) | codex |
+| backend architecture | ours · `assets/lenses/backend.md` | Python backend (`*.py`) | sonnet |
 | frontend architecture *(TODO: lens not written yet)* | ours · `assets/lenses/frontend.md` | frontend (`*.tsx`, `*.ts`) | sonnet |
+| cross-provider second opinion | external · the other provider's own reviewer | any code | see below |
+
+Our lenses run on `sonnet` — a lens is our rules, so it needs a host that reads it. The one
+reviewer that is not our lens is the cross-provider second opinion, below.
 
 Selection: read the diff, match rows by changed files, run only the matching rows. Always run
-the two "any code" lenses. Add stack-specific rows as they match. The frontend row is a
-placeholder — skip it until `assets/lenses/frontend.md` exists.
+the two "any code" lenses and the cross-provider second opinion. Add stack-specific rows as
+they match. The frontend row is a placeholder — skip it until `assets/lenses/frontend.md`
+exists.
 
-**Model diversity is on purpose.** Running a lens on a different model or provider (e.g.
-`codex`) is how a second opinion catches errors the author's model is blind to. The model is
-just a column — point a row at `codex` to get that. No separate "generalist" reviewer is
-needed for this; it is the same lens on another model.
+### Cross-provider second opinion
+
+A reviewer on a **different provider** than the one driving catches errors the driving model
+is blind to. The rule: the second opinion runs on the *other* provider, using that provider's
+**own** reviewer — genuinely fresh eyes, not our lens.
+
+- Driving from **Claude** (the case today) → the second opinion is **Codex**. Run Codex's
+  built-in reviewer through the connected codex plugin: `/codex:review` (which calls
+  `codex-companion.mjs review --base <ref>`). Codex uses its own review prompt; we pass no
+  lens.
+- Driving from **Codex** → the second opinion would be **Claude**. The codex plugin lives only
+  inside Claude Code, so it is not run there — Codex reviewing Codex is pointless.
+
+Run only **one** cross-provider reviewer. Not every reviewer is Codex; the rest stay on the
+driving provider (`sonnet`). One other-provider pass is the second opinion; more is waste.
+
+How Codex's built-in review delivers its findings — whether it comments on the PR itself or
+returns a report the harness folds in — must be confirmed on a live run. This is the first
+Codex wiring; treat it as provisional.
 
 ### Extending the roster
 
