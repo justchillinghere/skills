@@ -24,7 +24,7 @@ def used_ids(plans_dir: Path) -> set[int]:
         return set()
 
     ids: set[int] = set()
-    for path in plans_dir.rglob("*.md"):
+    for path in plans_dir.rglob("*"):
         match = NUMBERED_NAME.match(path.name)
         if match is None:
             continue
@@ -73,7 +73,7 @@ def main() -> None:
         print(f"{branch}/{name}")
         return
 
-    print(f"{name}.md")
+    print(name)
 
 
 if __name__ == "__main__":

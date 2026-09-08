@@ -1,6 +1,6 @@
 # Codex Execution Plans (ExecPlans)
 
-This document describes the requirements for an execution plan ("ExecPlan"), a design document that a coding agent can follow to deliver a working feature or system change. Treat the reader as a complete beginner to this repository: they have only the current working tree and the single ExecPlan file you provide. There is no memory of prior plans and no external context.
+This document describes the requirements for an execution plan ("ExecPlan"), an implementation guide that a coding agent can follow to deliver a working feature or system change. Treat the reader as a complete beginner to this repository: they have the current working tree, this ExecPlan, and — checked in alongside it in the same `NNN-slug/` plan directory — the approved Design Note (`design-note.md`) that this ExecPlan executes. There is no memory of prior plans and no other external context. The ExecPlan must remain self-sufficient for execution; it incorporates the Design Note by reference for the decisions and the "why" (see "Relationship to the Design Note" below).
 
 ## How to use ExecPlans and PLANS.md
 
@@ -12,15 +12,28 @@ When discussing an executable specification (ExecPlan), record decisions in a lo
 
 When researching a design with challenging requirements or significant unknowns, use milestones to implement proof of concepts, "toy implementations", etc., that allow validating whether the user's proposal is feasible. Read the source code of libraries by finding or acquiring them, research deeply, and include prototypes to guide a fuller implementation.
 
+## Relationship to the Design Note
+
+An ExecPlan is subordinate to a Design Note. The Design Note (`design-note.md`, in the same `NNN-slug/` plan directory) is the **decision** artifact, owned by a human: it settles the problem, domain model, business rules, use cases, and contracts. The ExecPlan is the **execution** artifact, generated from an approved Design Note: it translates those decisions into an ordered, codebase-anchored, test-backed, progress-tracked build.
+
+Division of labor:
+
+* The Design Note decides *what* and *how it is shaped* — architecture, domain, contracts.
+* The ExecPlan decides *how to build it* — order, target files, tests, sequencing, evidence — and nothing above that.
+
+The one hard rule: an ExecPlan never decides or silently changes architecture, domain, or contracts. If execution reveals that a decision in the Design Note is wrong or missing, stop, update the Design Note (and surface it to the human), and only then continue. Do not re-decide upstream concerns inside the ExecPlan. This artifact boundary is the forcing function that keeps architecture a human decision made up front, rather than something an executor settles by default mid-build.
+
+Consequently, the `Decision Log` in an ExecPlan records **execution** decisions and deviations — build order, library/tooling choices, why a step was retried or changed — not architecture or contract decisions, which belong to the Design Note's own decision log. Do not restate the Design Note here; reference it by path and record only what execution added.
+
 ## Requirements
 
 NON-NEGOTIABLE REQUIREMENTS:
 
-* Every ExecPlan must be fully self-contained. Self-contained means that in its current form it contains all knowledge and instructions needed for a novice to succeed.
-* Every ExecPlan is a living document. Contributors are required to revise it as progress is made, as discoveries occur, and as design decisions are finalized. Each revision must remain fully self-contained.
-* Every ExecPlan must enable a complete novice to implement the feature end-to-end without prior knowledge of this repo.
+* Every ExecPlan must be self-contained at the level of its plan directory. The ExecPlan plus the `design-note.md` checked in beside it must together carry everything a fresh agent needs to execute. The ExecPlan holds execution; it references the Design Note for decisions, domain, contracts, and the "why" — it does not restate them.
+* Every ExecPlan is a living document. Contributors are required to revise it as progress is made, as discoveries occur, and as design decisions are finalized. Each revision must stay self-contained at the plan-directory level.
+* Every ExecPlan must let an agent that has the plan directory and the working tree implement the feature end-to-end with no other external context. Assume the reader has read the Design Note; do not re-explain what it already decides.
 * Every ExecPlan must produce a demonstrably working behavior, not merely code changes to "meet a definition".
-* Every ExecPlan must define every term of art in plain language or do not use it.
+* Every ExecPlan must define, in plain language, every execution term of art it introduces. For domain terms, rely on the Design Note.
 
 Purpose and intent come first. Begin by explaining, in a few sentences, why the work matters from a user's perspective: what someone can do after this change that they could not do before, and how to see it working. Then guide the reader through the exact steps to achieve that outcome, including what to edit, what to run, and what they should observe.
 
@@ -36,7 +49,7 @@ Write in plain prose. Prefer sentences over lists. Avoid checklists, tables, and
 
 ## Guidelines
 
-Self-containment and plain language are paramount. If you introduce a phrase that is not ordinary English ("daemon", "middleware", "RPC gateway", "filter graph"), define it immediately and remind the reader how it manifests in this repository (for example, by naming the files or commands where it appears). Do not say "as defined previously" or "according to the architecture doc." Include the needed explanation here, even if you repeat yourself.
+Self-containment and plain language are paramount. If you introduce a phrase that is not ordinary English ("daemon", "middleware", "RPC gateway", "filter graph"), define it immediately and remind the reader how it manifests in this repository (for example, by naming the files or commands where it appears). The one document you may point to is the Design Note in this same plan directory: reference it for decisions, domain, and contracts rather than repeating them. Do not point to prior plans, external blogs, or architecture docs outside this plan directory; if that knowledge is required for execution, embed it here in your own words.
 
 Avoid common failure modes. Do not rely on undefined jargon. Do not describe "the letter of a feature" so narrowly that the resulting code compiles but does nothing meaningful. Do not outsource key decisions to the reader. When ambiguity exists, resolve it in the plan itself and explain why you chose that path. Err on the side of over-explaining user-visible effects and under-specifying incidental implementation details.
 
@@ -88,7 +101,7 @@ Prefer additive code changes followed by subtractions that keep tests passing. P
 
     This ExecPlan is a living document. The sections `Progress`, `Surprises & Discoveries`, `Decision Log`, and `Outcomes & Retrospective` must be kept up to date as work proceeds.
 
-    Note here that this document must be maintained in accordance with the planning conventions ("PLANS.md"). Those conventions normally live in the `development-planning` skill (`assets/PLANS.md`), not in this repository. Only if a customized `docs/PLANS.md` is checked into this repo, reference that path here instead and defer to it.
+    If PLANS.md file is checked into the repo, reference the path to that file here from the repository root and note that this document must be maintained in accordance with PLANS.md.
 
     ## Purpose / Big Picture
 
