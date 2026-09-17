@@ -71,7 +71,7 @@ Task-specific context (fill from the plan and repo):
 
 - The plan directory path and the one- or two-sentence summary of what this task adds.
 - Repo root, language/version, test command, migration tool — read these from the repo's
-  `CLAUDE.md` or `PLANS.md` rather than guessing.
+  `CLAUDE.md` or the task's `exec-plan.md` rather than guessing.
 - The feature branch name (from the plan's `NNN-slug`, e.g. `feat/003-voice-transcription`).
 - Any temporary observability the human wants for manual testing, behind a settings flag so
   it is removable in one line — not commented-out code.
@@ -82,9 +82,23 @@ The implementer keeps the ExecPlan living sections (`Progress`, `Decision Log`,
 
 ### Parallel implementation
 
-If the plan's milestones or tasks are genuinely independent, you may spawn more than one
-implementer subagent in parallel, one per independent slice. Only do this when the slices do
-not touch the same files or depend on each other's output. When in doubt, go sequential.
+Parallelism is a win only when three things hold. Miss one and it costs time, not saves it.
+
+- **Architecture is frozen.** The Design Note is settled and the contracts are fixed. Before
+  that, "independent" is a guess, and parallel work on a guessed boundary produces rework.
+- **The slices are coarse and independent.** Spawn one implementer per heavy, self-contained
+  chunk — a whole adapter, the backend vs the frontend — that does not touch another slice's
+  files or depend on its output. Do **not** fan out fine, similar units: four CRUD endpoints
+  that share one pattern are faster in one implementer that already holds the pattern than in
+  four that each re-derive it. Parallelize chunks, not lines.
+- **Review still follows every slice.** Step 3 runs on the combined result exactly as it does
+  for one implementer. Parallel implementation without that fan-out just moves the bottleneck
+  onto you; the review is what keeps your attention on triaged findings, not raw diffs.
+
+The plan should already name the parallelizable chunks — the ExecPlan's `Parallelizable units`
+list, filled during planning. Do not rediscover them from memory here; if that list is absent,
+the plan was not decomposed for parallel work, so go sequential. Cap concurrent implementers at
+what one review pass can trace. When in doubt, go sequential.
 
 ## Step 3 — Review fan-out (always)
 

@@ -144,6 +144,10 @@ Prefer additive code changes followed by subtractions that keep tests passing. P
 
     Describe, in prose, the sequence of edits and additions. Name files, modules, interfaces, and behavior to implement. Do not include full function bodies or complete source-file content; keep code examples to signatures, pseudocode, or short snippets needed to explain a constraint.
 
+    ## Parallelizable Units
+
+    List the coarse, independent chunks a separate implementer could build at the same time — a whole adapter, backend vs frontend — and the boundary each one needs frozen first (shared model, contract). If the work is one sequential thread, say so: "none — sequential". Do not list fine, similar units that share one pattern; those are faster in one implementer that already holds the pattern. This list is what `plan-execution` reads to fan out safely, so name only chunks whose boundaries the Design Note has already settled.
+
     ## Concrete Steps
 
     State the exact commands to run and where to run them (working directory). When a command generates output, show a short expected transcript so the reader can compare. This section must be updated as work proceeds.

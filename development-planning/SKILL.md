@@ -1,6 +1,6 @@
 ---
 name: development-planning
-description: Use when the user asks to plan, execute, continue, resume, follow up, maintain, or organize a development task using repository plans. Planning starts with a human-owned Design Note (decisions: problem, domain, use cases, contracts), which is grilled with a review lens and then drives an agent-owned ExecPlan (execution: order, files, tests, progress). Ensures docs/PLANS.md, docs/DESIGN_NOTE.md, and docs/plans/ exist, records deferred cleanup in TECH_DEBT.md, and uses stable task IDs for plan directories and branches.
+description: Use when the user asks to plan, execute, continue, resume, follow up, maintain, or organize a development task using repository plans. Planning starts with a human-owned Design Note (decisions: problem, domain, use cases, contracts), which is grilled with a review lens and then drives an agent-owned ExecPlan (execution: order, files, tests, progress). Reads its Design Note and ExecPlan templates from the skill itself — it does not copy them into the repository. Ensures docs/plans/ exists, records deferred cleanup in TECH_DEBT.md, and uses stable task IDs for plan directories and branches.
 ---
 
 # Development Planning
@@ -8,9 +8,10 @@ description: Use when the user asks to plan, execute, continue, resume, follow u
 Use this skill for development work that should be planned, resumed from an existing plan,
 or executed from a living task document.
 
-The repository owns the actual planning files. This skill provides the setup convention,
-the canonical `DESIGN_NOTE.md` and `PLANS.md` templates, a review lens for grilling a
-design before build, and a helper for choosing the next local task ID.
+The repository owns the actual planning files — the filled-in Design Notes and ExecPlans
+for each task. This skill owns the templates. The canonical `DESIGN_NOTE.md` and `PLANS.md`
+templates and the review lens stay in the skill's `assets/`, and the ID helper in the
+skill's `scripts/`. Read them from there. Do not copy the templates into the repository.
 
 ## Two artifacts, two readers
 
@@ -21,10 +22,11 @@ separate is the point — do not merge them.
   build and how it is shaped: problem, domain model, use cases, contracts. An agent may
   draft it, but the human decides the domain, use cases, and contracts. Both the backend
   and frontend build agents build from it. Template + full guidance: `assets/DESIGN_NOTE.md`
-  (installed as `docs/DESIGN_NOTE.md`).
+  in this skill. Read it there; do not copy it into the repository.
 - **ExecPlan** (`exec-plan.md`) — the **execution** artifact, **agent-owned**, generated
   **from** an approved Design Note. How to build exactly what was decided, step by step.
-  Template + full guidance: `assets/PLANS.md` (installed as `docs/PLANS.md`).
+  Template + full guidance: `assets/PLANS.md` in this skill. Read it there; do not copy it
+  into the repository.
 - **Review lens** (`assets/REVIEW_LENS.md`) — generic gap-finding questions to grill a
   Design Note before build. Skill-only: never copied into the repository.
 
@@ -57,12 +59,10 @@ boundary is the forcing function that keeps architecture a human decision made u
 
 ## Repository Setup
 
-At the repository root, expect:
+At the repository root, expect only the filled-in plans, not the templates:
 
 ```text
 docs/
-├── PLANS.md
-├── DESIGN_NOTE.md
 └── plans/
     ├── active/
     │   └── NNN-slug/
@@ -72,29 +72,31 @@ docs/
     └── TECH_DEBT.md
 ```
 
-If `docs/PLANS.md` is missing, create the structure and copy `assets/PLANS.md` from this
-skill into `docs/PLANS.md`.
-
-If `docs/DESIGN_NOTE.md` is missing, copy `assets/DESIGN_NOTE.md` from this skill.
-
-If `docs/plans/TECH_DEBT.md` is missing, copy `assets/TECH_DEBT.md` from this skill.
+The `PLANS.md` and `DESIGN_NOTE.md` templates stay in this skill's `assets/`. Do not copy
+them into `docs/`. The repository holds only per-task plans under `docs/plans/`.
 
 Create `docs/plans/active/` and `docs/plans/archived/` if missing.
 
+`TECH_DEBT.md` is a real data file, not a template. If `docs/plans/TECH_DEBT.md` is missing,
+create it from `assets/TECH_DEBT.md` in this skill. It is created once, then it grows with
+real entries.
+
 ## Required First Step
 
-Before authoring, editing, or executing a plan, read the repository-local convention files
-that exist — `docs/PLANS.md` and, if present, `docs/DESIGN_NOTE.md` — in full. Follow them
-over this skill whenever there is a conflict; the repository-local files are the source of
-truth because teams may customize them. In older repositories `docs/DESIGN_NOTE.md` may not
-exist yet — that is expected: it is created on setup when you plan a new task, and its
-absence does not block continuing a legacy plan (see "Legacy plans and migration").
+Before authoring, editing, or executing a plan, read the templates in full: `assets/PLANS.md`
+and `assets/DESIGN_NOTE.md` from this skill.
+
+A team may still customize the convention. If the repository has its own `docs/PLANS.md` or
+`docs/DESIGN_NOTE.md`, read that file instead and follow it over the skill on any conflict.
+Do not create these files yourself. Read the skill's templates by default; use a repo-local
+file only when the team already put one there.
 
 ## Planning workflow
 
 When the user asks to plan a new task:
 
-1. **Design Note first.** Draft `design-note.md` from `docs/DESIGN_NOTE.md`, filling only
+1. **Design Note first.** Draft `design-note.md` from the skill's `assets/DESIGN_NOTE.md`
+   template (or a repo-local `docs/DESIGN_NOTE.md` if the team has one), filling only
    the relevant sections. The human owns the domain, use cases, and contracts — draft with
    options and let them decide; do not resolve architecture unilaterally.
 2. **Grill it in a clean context.** Launch a **subagent** whose only inputs are the
@@ -106,7 +108,8 @@ When the user asks to plan a new task:
    contract are settled. Only grill in-context yourself when a subagent is unavailable — and
    then say so, since it is the weaker check.
 3. **Then the ExecPlan.** Generate `exec-plan.md` from the approved Design Note, following
-   `docs/PLANS.md`. It is execution only (order, files, acceptance→tests, progress) and is
+   the skill's `assets/PLANS.md` template (or a repo-local `docs/PLANS.md` if the team has
+   one). It is execution only (order, files, acceptance→tests, progress) and is
    subordinate to the Design Note per the hard rule above.
 4. **Build.** Execute the ExecPlan, keeping its `Progress`, `Surprises & Discoveries`, and
    validation sections current. Do not prompt for "next steps"; proceed milestone to
@@ -135,9 +138,8 @@ stay valid — do not be thrown by the difference:
   `NNN-slug.md` file is a legacy single-file ExecPlan — decisions and execution combined in
   one document, with its own embedded `Decision Log`.
 - **Continue legacy plans in place, as-is.** Read the flat file and continue from its
-  `Progress`, `Decision Log`, and validation. Do not expect a separate `design-note.md`, do
-  not restructure the file into the new scheme, and do not treat a missing
-  `docs/DESIGN_NOTE.md` as an error.
+  `Progress`, `Decision Log`, and validation. Do not expect a separate `design-note.md`, and
+  do not restructure the file into the new scheme.
 - **Migrate only on request.** Split a legacy plan into a Design Note + ExecPlan only if the
   user asks. When you do, keep the same `NNN` ID: create `NNN-slug/`, move the decisions into
   `design-note.md` and the execution into `exec-plan.md`.
@@ -150,9 +152,9 @@ Each plan is a directory, not a single file:
 
 1. Generate a short lowercase kebab-case slug from the task name.
 2. Use `scripts/next_plan_id.py` from this skill to find the next local task ID and name.
-3. Create `docs/plans/active/NNN-slug/` and, inside it, `design-note.md` (from
-   `docs/DESIGN_NOTE.md`) and, once the design is approved, `exec-plan.md` (from
-   `docs/PLANS.md`).
+3. Create `docs/plans/active/NNN-slug/` and, inside it, `design-note.md` (from the skill's
+   `assets/DESIGN_NOTE.md`) and, once the design is approved, `exec-plan.md` (from the
+   skill's `assets/PLANS.md`).
 4. Re-check before writing that no `NNN-*` directory or file exists anywhere under
    `docs/plans/`; if a collision exists, rerun the helper and use the next ID.
 

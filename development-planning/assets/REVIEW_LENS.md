@@ -48,6 +48,10 @@ Each question carries the failure it typically catches.
   actually viewer-agnostic? *(catches: parallel per-audience modules/repos/DTOs)*
 - Is "reuse / change / add / do not touch" stated explicitly? Is there a parallel stack
   being built for something that should be reused?
+- Which parts are **independent chunks** that a separate implementer could build at the same
+  time — a whole adapter, backend vs frontend — and what must be **frozen** first (contract,
+  shared model) before they can split safely? *(catches: discovering parallelizable work too
+  late, or splitting on a boundary that is not settled yet)*
 
 ## Contracts
 

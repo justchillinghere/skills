@@ -19,8 +19,8 @@ them apart.
   - **Ours** — a lens file we write and maintain, in `assets/lenses/` (e.g. `backend.md`).
     This is the home for review rules we own.
   - **External** — a third-party tool we call by name (e.g. `/ponytail-review` from the
-    ponytail plugin, the built-in `/code-review`, or Codex's own reviewer via the codex
-    plugin as the cross-provider second opinion).
+    ponytail plugin, the built-in `/code-review`, or Codex's own reviewer via the `codex`
+    CLI as the cross-provider second opinion).
 - **Harness** — the wrapper this skill owns. For every reviewer it applies the lens to the
   diff, enforces the shared finding discipline (below), then **delivers** the findings
   (inline PR comments, or a returned report). The harness is the same for every reviewer.
@@ -42,7 +42,7 @@ names a lens skill — never inline rules.
 | over-engineering | external · `/ponytail-review` | any code | sonnet |
 | backend architecture | ours · `assets/lenses/backend.md` | Python backend (`*.py`) | sonnet |
 | frontend architecture *(TODO: lens not written yet)* | ours · `assets/lenses/frontend.md` | frontend (`*.tsx`, `*.ts`) | sonnet |
-| cross-provider second opinion | external · the other provider's own reviewer | any code | see below |
+| cross-provider second opinion | external · `codex review` (the other provider's own reviewer) | any code | sonnet · runs the CLI |
 
 Our lenses run on `sonnet` — a lens is our rules, so it needs a host that reads it. The one
 reviewer that is not our lens is the cross-provider second opinion, below.
@@ -59,18 +59,19 @@ is blind to. The rule: the second opinion runs on the *other* provider, using th
 **own** reviewer — genuinely fresh eyes, not our lens.
 
 - Driving from **Claude** (the case today) → the second opinion is **Codex**. Run Codex's
-  built-in reviewer through the connected codex plugin: `/codex:review` (which calls
-  `codex-companion.mjs review --base <ref>`). Codex uses its own review prompt; we pass no
-  lens.
-- Driving from **Codex** → the second opinion would be **Claude**. The codex plugin lives only
-  inside Claude Code, so it is not run there — Codex reviewing Codex is pointless.
+  built-in reviewer through the `codex` CLI directly: `codex review --base <ref>`. Codex uses
+  its own review prompt; we pass no lens. The reviewer prints its findings to stdout; the
+  subagent captures that text and turns it into findings.
+- Driving from **Codex** → the second opinion would be **Claude**. Do not run Codex against
+  itself — that is not a cross-provider check.
 
 Run only **one** cross-provider reviewer. Not every reviewer is Codex; the rest stay on the
 driving provider (`sonnet`). One other-provider pass is the second opinion; more is waste.
 
-How Codex's built-in review delivers its findings — whether it comments on the PR itself or
-returns a report the harness folds in — must be confirmed on a live run. This is the first
-Codex wiring; treat it as provisional.
+The `codex` CLI is a plain shell command. A subagent can run it. It needs no plugin and no
+slash command. Confirm Codex is logged in first: `codex review` fails without an active
+account login. `codex review` also accepts `--uncommitted` (staged, unstaged, and untracked
+changes) and `--commit <sha>` if you need a target other than a base branch.
 
 ### Extending the roster
 
@@ -85,7 +86,8 @@ Codex wiring; treat it as provisional.
 
 For each selected row, spawn **one subagent**. Fill the lens and model from the row.
 
-- Model: from the row (default `sonnet`; `codex` where the row says so).
+- Model: `sonnet` for every reviewer. The cross-provider reviewer is also a `sonnet` subagent;
+  it runs `codex review` in the shell, so the Codex model comes from the CLI, not the subagent.
 - Prompt, in essence:
   - "You are a code reviewer. Apply this review lens — it is the authority on what to look
     for:" then either the contents of our lens file, or an instruction to run the external
