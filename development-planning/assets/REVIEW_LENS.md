@@ -61,6 +61,14 @@ Each question carries the failure it typically catches.
 - Is the contract a single source shared by backend and frontend? Who produces it, who
   consumes it?
 
+## Scope (when `research.md` exists)
+
+- Does the Design Note build exactly the option chosen in research — no pieces of the broader
+  option pulled in unannounced? If it exceeds the ticket, was that put to the human?
+  *(catches: scope creep from the redesign option leaking into a hardening fix)*
+- Did rejected systemic options and side findings land in `TECH_DEBT.md`? *(catches: the
+  real problem forgotten once the patch ships)*
+
 ## Cross-cutting
 
 - What here is **load-bearing** — a decision that determines the shape of everything above

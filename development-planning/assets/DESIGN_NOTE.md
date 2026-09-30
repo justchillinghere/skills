@@ -103,6 +103,7 @@ are guidance — keep or drop them.
 
     ## 10. Important Decisions / Trade-offs   [shared]
     Only where there was a real choice. Options → Decision → Why → Trade-off.
+    The choice of fix scope (A/B/C) lives in `research.md` — link it, do not repeat it.
     A big, long-lived decision may graduate into its own ADR.
 
     ## 11. Edge Cases / Risks          [either]
