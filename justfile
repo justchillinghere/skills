@@ -23,7 +23,7 @@ sync:
         destination="$target_root/$skill_name"
 
         if [[ -L "$destination" ]]; then
-          if [[ "$(readlink "$destination")" == "$skill_dir" ]]; then
+          if [[ "$destination:A" == "$skill_dir:A" ]]; then
             print -r -- "unchanged $destination"
             continue
           fi
