@@ -1,6 +1,6 @@
 ---
 name: development-planning
-description: Use when the user asks to research, assess, or scope a task, or to plan, execute, continue, resume, follow up, maintain, or organize a development task using repository plans. Planning optionally starts with a research.md (facts, causes, three fix scopes A/B/C to choose from), then a human-owned Design Note (decisions: problem, domain, use cases, contracts), which is grilled with a review lens and then drives an agent-owned ExecPlan (execution: order, files, tests, progress). Reads its Design Note and ExecPlan templates from the skill itself — it does not copy them into the repository. Ensures docs/plans/ exists, records deferred cleanup in TECH_DEBT.md, and uses stable task IDs for plan directories and branches.
+description: Use when the user asks to research, assess, or scope a task, or to plan, execute, continue, resume, follow up, maintain, or organize a development task using repository plans. Planning optionally starts with a research.md (facts, causes, three fix scopes A/B/C to choose from), then a human-owned Design Note (decisions: problem, domain, use cases, contracts), which is grilled with a review lens and then drives an agent-owned ExecPlan (execution: order, files, tests, progress). Reads its Design Note and ExecPlan templates from the skill itself — it does not copy them into the repository. Ensures docs/plans/ exists, keeps exec-plan.md and research.md local (never committed, deleted when done), records deferred cleanup in TECH_DEBT.md, and uses stable task IDs for plan directories and branches.
 ---
 
 # Development Planning
@@ -120,6 +120,21 @@ The `PLANS.md` and `DESIGN_NOTE.md` templates stay in this skill's `assets/`. Do
 them into `docs/`. The repository holds only per-task plans under `docs/plans/`.
 
 Create `docs/plans/active/` and `docs/plans/archived/` if missing.
+
+### What goes into git
+
+Only durable files are committed: `design-note.md` and `TECH_DEBT.md`. They keep the
+decisions a future reader needs. `exec-plan.md` and `research.md` are working files. They
+help only while the task runs; after the merge request opens, they are dead weight. Keep them
+local and untracked. Do not add them to `.gitignore` — that pollutes the project. Clean up
+after yourself instead:
+
+- Never stage them. Stage files by name; do not use `git add -A`, `git add .`, or
+  `git add docs/plans`.
+- Before the merge request opens, check `git status`. If either file is tracked, untrack it
+  with `git rm --cached <path>`.
+- When the task is done, delete both files (see "Archiving"). Anything in them that must
+  outlive the task goes to the Design Note or `TECH_DEBT.md` first.
 
 `TECH_DEBT.md` is a real data file, not a template. If `docs/plans/TECH_DEBT.md` is missing,
 create it from `assets/TECH_DEBT.md` in this skill. It is created once, then it grows with
@@ -274,7 +289,10 @@ When a plan is complete:
 
 1. Update the ExecPlan's `Outcomes & Retrospective` and confirm validation results are
    recorded.
-2. Promote the Design Note's durable invariants (§5) and long-lived decisions (§10) to a
+2. Move anything durable out of the local files: a decision made during execution goes to
+   the Design Note, deferred work goes to `TECH_DEBT.md`.
+3. Promote the Design Note's durable invariants (§5) and long-lived decisions (§10) to a
    permanent home (project memory or an ADR) — those outlive the plan; the rest does not.
-3. Move the whole `NNN-slug/` directory from `docs/plans/active/` to `docs/plans/archived/`.
-4. Leave the directory name and numeric ID unchanged.
+4. Delete `exec-plan.md` and `research.md`. They are local only (see "What goes into git").
+5. Move the whole `NNN-slug/` directory from `docs/plans/active/` to `docs/plans/archived/`.
+6. Leave the directory name and numeric ID unchanged.

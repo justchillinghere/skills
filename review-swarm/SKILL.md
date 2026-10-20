@@ -82,6 +82,26 @@ changes) and `--commit <sha>` if you need a target other than a base branch.
 - If a lens file grows large or needs its own scripts, promote it to a standalone skill later
   and change the row to call that skill. Starting as a file here is the low-commitment path.
 
+## Hygiene check (always, before the reviewers)
+
+Run this check yourself. It needs no subagent and no lens. List the files the change adds
+or modifies against the base ref:
+
+```bash
+git diff --name-only <base>...HEAD
+```
+
+Flag every working file that must not reach the merge request:
+
+- `exec-plan.md` and `research.md` under `docs/plans/`. These stay local; only
+  `design-note.md` and `TECH_DEBT.md` are committed (see `development-planning`).
+- Other scratch or service output: debug scripts, logs, local notes, build output, editor
+  or agent state.
+
+Report each one as a `medium` finding under the lens name `hygiene`. The fix is to remove it
+from git (`git rm --cached <path>`). Do not add `.gitignore` lines for it.
+Deliver these findings through the same adapter as the other reviewers.
+
 ## Running a reviewer (the harness)
 
 For each selected row, spawn **one subagent**. Fill the lens and model from the row.
@@ -134,8 +154,8 @@ strong signal — and the caller sees that naturally when reading the findings. 
 Where findings go depends on whether a pull request exists for this change.
 
 - **A PR exists** → the reviewer posts each finding as an inline comment on the PR, near the
-  line, prefixed `QA review · <lens>` (e.g. `QA review · ponytail`). Use `gh` for this. This
-  is the natural surface: comments are explicit and can be resolved.
+  line, prefixed `QA review · <lens>` (e.g. `QA review · ponytail`). Use `gh` on GitHub,
+  `glab` on GitLab. This is the natural surface: comments are explicit and can be resolved.
 - **No PR** → the reviewer returns its findings as text to the caller.
 
 The lens does not change between the two. Only the harness's delivery step does.
